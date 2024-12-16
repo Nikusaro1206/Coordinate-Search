@@ -13,7 +13,7 @@ cv2.namedWindow("Mouse Event Window")
 cv2.setMouseCallback("Mouse Event Window", mouse_callback)
 
 # 画像を読み込んでbgr2rgb変換
-file_path = "C:\\Users\\PC-USER\\Downloads\\mouseclicktestimag.jpg"
+file_path = "C:\\Users\\PC-USER\\Coordinate_Search\\Coordinate-Search\\mouseclicktestimag.jpg"
 image_bgr = cv2.imread(file_path)
 image_rgb = cv2.cvtColor(image_bgr, cv2.COLOR_BGR2RGB)
 
