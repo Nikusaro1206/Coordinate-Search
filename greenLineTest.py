@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 
-image = cv2.imread("testbed7.jpg")
+image = cv2.imread("testbed8.jpg")
 height = image.shape[0]
 width = image.shape[1]
 height_coefficient = height/700
