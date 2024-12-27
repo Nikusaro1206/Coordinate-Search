@@ -39,7 +39,7 @@ edges = cv2.Canny(mask, 150, 500)
 
 # 線を検出 (Hough Line Transform)
 lines = cv2.HoughLinesP(edges, 1, np.pi / 90,threshold=50, minLineLength=50, maxLineGap=100)
-
+print(lines)
 x = 0#一つ前のx座標
 y = 0#一つ前のy座標
 B = 1#何個目の座標か
