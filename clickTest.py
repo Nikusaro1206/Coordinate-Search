@@ -133,7 +133,7 @@ cv2.namedWindow("Mouse Event Window")
 cv2.setMouseCallback("Mouse Event Window", mouse_callback)
 
 #画像読み込み
-path = "testbed9.jpg"
+path = "testbed10.jpg"
 img ,hsv= img_read(path)
 #緑の輪郭線の取得
 green_mask ,green_mask_img= detect_green_color(img,hsv)
