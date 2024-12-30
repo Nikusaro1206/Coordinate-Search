@@ -133,8 +133,12 @@ cv2.namedWindow("Mouse Event Window")
 cv2.setMouseCallback("Mouse Event Window", mouse_callback)
 
 #画像読み込み
-path = "testbed10.jpg"
+#path = r"C:\Users\PC-USER\Coordinate_Search\Coordinate-Search\Testbed10.jpg"
+path = "C:\\Users\\PC-USER\\Coordinate_Search\\Coordinate-Search\\Testbed10.jpg"
+
+print(path)
 img ,hsv= img_read(path)
+#img ,hsv= img_read(repr(path)[1:-2])
 #緑の輪郭線の取得
 green_mask ,green_mask_img= detect_green_color(img,hsv)
 #cv2.imshow("GREEN Window", green_mask_img)
@@ -152,10 +156,10 @@ crop_hsv = cv2.cvtColor(crop_img, cv2.COLOR_BGR2HSV)
 #赤線(画像の拡大縮小)
 red_mask ,red_mask_img= detect_red_color(crop_img,crop_hsv)
 edges,red_lines = edge_jadge(red_mask_img,90)
-if red_lines is not None:
-        for line in red_lines:
-            x1, y1, x2, y2 = line[0]# 始点と終点の座標
-            cv2.line(crop_img, (x1, y1), (x2, y2), (0, 0, 255), 2)
+#if red_lines is not None:
+#       for line in red_lines:
+#            x1, y1, x2, y2 = line[0]# 始点と終点の座標
+#            cv2.line(crop_img, (x1, y1), (x2, y2), (0, 0, 255), 2)
 
 width_x,width_y1,height_x1,height_y,width_y2,height_x2 = green_line_jadge(red_lines)
 filtered_red_line = np.array(line_jadge(width_y1,width_y2,width_x))#横の線
@@ -165,28 +169,28 @@ filtered_red_line = np.vstack((filtered_red_line
 #緑線再取得
 green_mask ,green_mask_img= detect_green_color(crop_img,crop_hsv)
 edges,green_lines = edge_jadge(green_mask_img,180)
-if green_lines is not None:
-        for line in green_lines:
-            x1, y1, x2, y2 = line[0]# 始点と終点の座標
-            cv2.line(crop_img, (x1, y1), (x2, y2), (0, 255, 0), 2)
+#if green_lines is not None:
+#        for line in green_lines:
+#            x1, y1, x2, y2 = line[0]# 始点と終点の座標
+#            cv2.line(crop_img, (x1, y1), (x2, y2), (0, 255, 0), 2)
 
 width_x,width_y1,height_x1,height_y,width_y2,height_x2 = green_line_jadge(green_lines)
 filtered_green_line = np.array(line_jadge(width_y1,width_y2,width_x))#横の線
 filtered_green_line = np.vstack((filtered_green_line
                                ,np.array(line_jadge(height_x1,height_x2,height_y))))#縦の線
-#for i in range (0,4):
-#    if i == 0:
-#        x1,y1,x2,y2 = filtered_green_line[0]
-#    elif i == 1:
-#        y1,x1,y2,x2 = filtered_green_line[1]
-#    elif i == 2:
-#        x1,y1,x2,y2 = filtered_red_line[0]
-#    elif i == 3:
-#        y1,x1,y2,x2 = filtered_red_line[1]
-#    if i == 0 or i == 1:
-#        cv2.line(crop_img, (x1,y1), (x2,y2), (0, 255, 0), 2)
-#    else:
-#        cv2.line(crop_img, (x1,y1), (x2,y2), (0, 0, 255), 2)
+for i in range (0,4):
+    if i == 0:
+        x1,y1,x2,y2 = filtered_green_line[0]
+    elif i == 1:
+        y1,x1,y2,x2 = filtered_green_line[1]
+    elif i == 2:
+        x1,y1,x2,y2 = filtered_red_line[0]
+    elif i == 3:
+        y1,x1,y2,x2 = filtered_red_line[1]
+    if i == 0 or i == 1:
+        cv2.line(crop_img, (x1,y1), (x2,y2), (0, 255, 0), 10)
+    else:
+        cv2.line(crop_img, (x1,y1), (x2,y2), (0, 0, 255), 10)
 xgap,ygap = red_gap(filtered_red_line,filtered_green_line)
 print(f"x:{xgap},y:{ygap}")
 
