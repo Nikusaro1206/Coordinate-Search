@@ -51,10 +51,10 @@ class Work_window(tk.Frame):
         super().__init__(root,width=380,height=480,
                          borderwidth=4,relief='groove')
         self.root = root
-        #self.pack()
+        self.pack()
         self.pack_propagate(0)
         self.create_work(path)
-        
+
     def create_work(self,path):       
         # ウィンドウの作成
         cv2.namedWindow("Mouse Event Window")
@@ -62,9 +62,12 @@ class Work_window(tk.Frame):
         # コールバック関数をウィンドウにセット
         cv2.setMouseCallback("Mouse Event Window", self.mouse_callback)
 
-        normalized_path = os.path.normpath(normalized_path)
+        test_path = "C:\\Users\\PC-USER\\Coordinate_Search\\Coordinate-Search\\Testbed10.jpg"
+
+        #normalized_path = os.path.normpath(path)
+        normalized_path = os.path.normpath(test_path)
         #画像読み込み
-        img ,hsv= self.img_read(path)
+        img ,hsv= self.img_read(normalized_path)
         #緑の輪郭線の取得
         green_mask ,green_mask_img= self.detect_green_color(img,hsv)
         #cv2.imshow("GREEN Window", green_mask_img)
@@ -82,11 +85,7 @@ class Work_window(tk.Frame):
         #赤線(画像の拡大縮小)
         red_mask ,red_mask_img= self.detect_red_color(crop_img,crop_hsv)
         edges,red_lines = self.edge_jadge(red_mask_img,90)
-        #if red_lines is not None:
-        #       for line in red_lines:
-        #            x1, y1, x2, y2 = line[0]# 始点と終点の座標
-        #            cv2.line(crop_img, (x1, y1), (x2, y2), (0, 0, 255), 2)
-
+       
         width_x,width_y1,height_x1,height_y,width_y2,height_x2 = self.green_line_jadge(red_lines)
         filtered_red_line = np.array(self.line_jadge(width_y1,width_y2,width_x))#横の線
         filtered_red_line = np.vstack((filtered_red_line
@@ -95,11 +94,7 @@ class Work_window(tk.Frame):
         #緑線再取得
         green_mask ,green_mask_img= self.detect_green_color(crop_img,crop_hsv)
         edges,green_lines = self.edge_jadge(green_mask_img,180)
-        #if green_lines is not None:
-        #        for line in green_lines:
-        #            x1, y1, x2, y2 = line[0]# 始点と終点の座標
-        #            cv2.line(crop_img, (x1, y1), (x2, y2), (0, 255, 0), 2)
-
+        
         width_x,width_y1,height_x1,height_y,width_y2,height_x2 = self.green_line_jadge(green_lines)
         filtered_green_line = np.array(self.line_jadge(width_y1,width_y2,width_x))#横の線
         filtered_green_line = np.vstack((filtered_green_line
