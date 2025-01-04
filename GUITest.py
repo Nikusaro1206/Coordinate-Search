@@ -5,6 +5,7 @@ import cv2
 import numpy as np
 from PIL import Image, ImageFilter
 import os
+import math
 
 class Seting_aplication(tk.Frame):
     def __init__(self,root=None):
@@ -17,55 +18,108 @@ class Seting_aplication(tk.Frame):
 
     def create_widgets(self):
         #入力欄の作成
-        self.input_box = tk.Entry(width=40)
-        self.input_box.place(x=10, y=100)
-
-        #ラベルの作成
-        input_label = tk.Label(text="結果")
-        input_label.place(x=10, y=70)
-
+        input_label = tk.LabelFrame(self,text="参照",padx=10,pady=10)
+        input_label.place(relx=0.5,y=50,anchor=tk.CENTER)
+        self.input_box = tk.Entry(self,width=40)
+        self.input_box.grid(in_=input_label,row=0,column=0)
         #ボタンの作成
-        button = tk.Button(text="参照",command=self.file_select)
-        button.place(x=10, y=130)
+        button = tk.Button(self,text="参照",command=self.file_select)
+        button.grid(in_=input_label,row=0,column=1)
+
+        #設定欄の作成
+        setting_sp=tk.LabelFrame(self,text="設定",padx=10,pady=10)
+        setting_sp.place(relx=0.05,y=150)
+        self.gap_box = tk.Entry(self,width=10)
+        self.gap_box.grid(in_=setting_sp,row=0,column=0)
+        self.gap_box.insert(tk.END,150)
+
+        self.x_pixel_box = tk.Entry(self,width=10)
+        self.x_pixel_box.grid(in_=setting_sp,row=1,column=0)
+        self.x_pixel_box.insert(tk.END,125)
+        self.y_pixel_box = tk.Entry(self,width=10)
+        self.y_pixel_box.grid(in_=setting_sp,row=1,column=1)
+        self.y_pixel_box.insert(tk.END,175)
+
+        self.real_x = tk.Entry(self,width=10)
+        self.real_x.grid(in_=setting_sp,row=2,column=0)
+        self.real_x.insert(tk.END,500)
+        self.real_y = tk.Entry(self,width=10)
+        self.real_y.grid(in_=setting_sp,row=2,column=1)
+        self.real_y.insert(tk.END,700)
 
         #描画開始
-        Show_button =  tk.Button(text="描画",command=self.create_window)
-        Show_button.place(relx=0.5,y=150,anchor=tk.CENTER)
+        Show_button =  tk.Button(self,text="描画",command=self.create_window)
+        Show_button.place(relx=0.5,rely=0.8,anchor=tk.CENTER)
 
     def file_select(self):
         idir = 'C:'
         filetype = [("jpg","*.jpg"), ("png","*.png"), ("すべて","*")]
         file_path = tk.filedialog.askopenfilename(filetypes = filetype, initialdir = idir)
-        print(f"{file_path}")
+        #print(f"{file_path}")      
+        self.input_box.delete(0,tk.END)
         self.input_box.insert(tk.END, file_path)
     
     def create_window(self):
         current = tk.Tk()
         current.title("座標の特定")
-        path = self.input_box.get
-        work_window = Work_window(path=path)
+        path,gap,xpixel,ypixel,realx,realy = self.box_get()
+        work_window = Work_window(root = current,path=path,gap=gap,
+                                  real_x=realx,real_y=realy,x_pixel=xpixel,y_pixel=ypixel)
         work_window.mainloop()
+    def box_get(self):
+        path = self.input_box.get()
+        gap = self.gap_box.get()
+        xpixel = self.x_pixel_box.get()
+        ypixel = self.y_pixel_box.get()
+        realx = self.real_x.get()
+        realy = self.real_y.get()
 
+        return path,gap,xpixel,ypixel,realx,realy
 class Work_window(tk.Frame):
-    def __init__(self,root=None,path=None):
+    def __init__(self,root=None,path=None,gap=None,
+                 real_x=None,real_y=None,x_pixel=None,y_pixel=None):
         super().__init__(root,width=380,height=480,
                          borderwidth=4,relief='groove')
         self.root = root
         self.pack()
+        self.gap = int(gap) #切り抜き時の余白
+        self.fit_x_pixel = int(x_pixel) #赤線までのピクセル数（ｘ）
+        self.fit_y_pixel = int(y_pixel) #赤線までのピクセル数（ｙ）
+        self.real_x = int(real_x) #赤線までの実際の長さ（ｘ，mm）
+        self.real_y = int(real_y) #赤線までの実際の長さ（ｙ，mm）
+        self.pixel_log = []
         self.pack_propagate(0)
+        self.current_widget(path=path)
+
+    def current_widget(self,path):
+        quit_btn = tk.Button(self,text = "終了",command = self.work_destroy)
+        quit_btn.place(relx=0.8,rely=0.9,anchor=tk.CENTER)
+
+        #履歴部分
+        self.rireki_sp = tk.LabelFrame(self,text="履歴",padx=10,pady=10)
+        self.Text2 = tk.StringVar()
+        self.Text2.set("-")
+        rireki1 = tk.Message(self.rireki_sp,textvariable = self.Text2,width=270,anchor="nw")
+        self.rireki_sp.place(relx=0.5,relwidth=0.3,y=220,height=150,anchor=tk.CENTER)
+        rireki1.grid(in_=self.rireki_sp,row=0,column=0)
         self.create_work(path)
 
-    def create_work(self,path):       
-        # ウィンドウの作成
-        cv2.namedWindow("Mouse Event Window")
-
-        # コールバック関数をウィンドウにセット
-        cv2.setMouseCallback("Mouse Event Window", self.mouse_callback)
-
+    def work_destroy(self):
+        self.root.destroy()
+        cv2.destroyAllWindows()
+    
+    def create_work(self,path):
         test_path = "C:\\Users\\PC-USER\\Coordinate_Search\\Coordinate-Search\\Testbed10.jpg"
 
-        #normalized_path = os.path.normpath(path)
-        normalized_path = os.path.normpath(test_path)
+        normalized_path = os.path.normpath(path)
+
+        # ウィンドウの作成
+        cv2.namedWindow(f"Mouse click window:{normalized_path}")
+
+        # コールバック関数をウィンドウにセット
+        cv2.setMouseCallback(f"Mouse click window:{normalized_path}", self.mouse_callback)
+        #cv2.setMouseCallback(f"座標の特定", self.mouse_callback)
+
         #画像読み込み
         img ,hsv= self.img_read(normalized_path)
         #緑の輪郭線の取得
@@ -117,26 +171,23 @@ class Work_window(tk.Frame):
 
         output_img = self.resize_img(crop_img,xgap,ygap)
 
-        while True:
-            # ウィンドウに画像を表示
-            cv2.imshow("Mouse Event Window", output_img)
+        # ウィンドウに画像を表示
+        cv2.imshow(f"Mouse click window:{normalized_path}", output_img)
 
-            # キー入力を待機 (キー 'q' を押すと終了)
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                break
-
-        # リソースを解放
-        cv2.destroyAllWindows()
     def img_read (self,path):
         img = cv2.imread(path)
         hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
         return img,hsv
 
     def resize_img(self,img,x,y):
+
         height = img.shape[0]
         width = img.shape[1]
-        width_coefficient = abs(250/x)
-        height_coefficient = abs(350/y)
+        width_coefficient = abs(self.fit_x_pixel/x)
+        height_coefficient = abs(self.fit_y_pixel/y)
+        self.x_coefficient = abs(self.real_x/self.fit_x_pixel)
+        self.y_coefficient = abs(self.real_y/self.fit_y_pixel)
+        
         return cv2.resize(img,(int(width*width_coefficient),int(height*height_coefficient)))
         #return cv2.resize(img,(x,y))
 
@@ -191,7 +242,7 @@ class Work_window(tk.Frame):
     def line_draw(self,img,x1,y1,x2,y2):
         pass
     def img_crop(self,img,coordinate_list):
-        gap = 150
+        
         pillow_image = Image.fromarray(img)#opencvのndarray形式をpillowの形式に変換
         pillow_x,pillow_y=pillow_image.size
 
@@ -199,7 +250,7 @@ class Work_window(tk.Frame):
         height_x2 = coordinate_list[1,3]
         width_y2 = coordinate_list[0,3]
         # 切り抜く領域を指定（左, 上, 右, 下）
-        crop_box= (height_x2 - gap,width_y2 - gap,pillow_x,pillow_y)# 例: (x1, y1, x2, y2)
+        crop_box= (height_x2 - self.gap,width_y2 - self.gap,pillow_x,pillow_y)# 例: (x1, y1, x2, y2)
         print(crop_box)
         cropped_image = pillow_image.crop(crop_box)
         # Pillow形式をOpenCV形式に変換
@@ -241,7 +292,6 @@ class Work_window(tk.Frame):
             pass
         else:
             pass
-        pass
     def red_gap(self,red_lines,green_lines):
         ygap = red_lines[0,3] - green_lines[0,1]
         xgap = red_lines[1,3] - green_lines[1,1]
@@ -249,7 +299,20 @@ class Work_window(tk.Frame):
     # マウスクリック時に座標を取得するコールバック関数
     def mouse_callback(self,event, x, y, flags, param):
         if event == cv2.EVENT_LBUTTONDOWN:  # 左クリック時
-            print(f"Clicked at: ({x}, {y})")  # 座標を表示
+            real_x = x*self.x_coefficient
+            real_y = y*self.y_coefficient
+            self.pixel_log.insert(0,(real_x,real_y))
+            if len(self.pixel_log) > 1:
+                x2,y2=self.pixel_log[1]
+                distanse = abs(math.sqrt((real_x-x2)**2+(real_y-y2)**2))
+                #check:^は「TypeError: unsupported operand type(s) for ^: 'float' and 'float'」が出て使えない
+                print(f"距離:{distanse}")
+                self.Text2.config(text=self.pixel_log[1:])
+                #print(f"x2:{x2} y2:{y2}")
+            #self.pixel_log.append(y)
+            
+            print(self.pixel_log[0])
+            print(f"Clicked at: ({real_x}, {real_y})")  # 座標を表示
 
 root = tk.Tk()
 root.title("Seting Window")
