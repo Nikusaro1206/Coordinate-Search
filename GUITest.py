@@ -22,30 +22,45 @@ class Seting_aplication(tk.Frame):
         input_label.place(relx=0.5,y=50,anchor=tk.CENTER)
         self.input_box = tk.Entry(self,width=40)
         self.input_box.grid(in_=input_label,row=0,column=0)
+        self.input_box.insert(tk.END,"Testbed10.jpg")#デバッグ用
         #ボタンの作成
         button = tk.Button(self,text="参照",command=self.file_select)
         button.grid(in_=input_label,row=0,column=1)
 
         #設定欄の作成
         setting_sp=tk.LabelFrame(self,text="設定",padx=10,pady=10)
-        setting_sp.place(relx=0.05,y=150)
+        setting_sp.place(relx=0.5,y=200,anchor=tk.CENTER)
+        gap_guide = tk.Label(self,text="切り抜き時の余白:")
         self.gap_box = tk.Entry(self,width=10)
-        self.gap_box.grid(in_=setting_sp,row=0,column=0)
         self.gap_box.insert(tk.END,150)
+        gap_guide.grid(in_=setting_sp,row=0,column=0,columnspan=2)
+        self.gap_box.grid(in_=setting_sp,row=0,column=2)
 
+        pixel_guide = tk.Label(self,text="赤線までのピクセル数")
+        pixel_guide_x = tk.Label(self,text="x:")
+        pixel_guide_y = tk.Label(self,text="y:")
         self.x_pixel_box = tk.Entry(self,width=10)
-        self.x_pixel_box.grid(in_=setting_sp,row=1,column=0)
-        self.x_pixel_box.insert(tk.END,125)
         self.y_pixel_box = tk.Entry(self,width=10)
-        self.y_pixel_box.grid(in_=setting_sp,row=1,column=1)
+        pixel_guide.grid(in_=setting_sp,row=1,column=0,columnspan=2)
+        pixel_guide_x.grid(in_=setting_sp,row=2,column=0)
+        pixel_guide_y.grid(in_=setting_sp,row=2,column=2)
+        self.x_pixel_box.grid(in_=setting_sp,row=2,column=1)
+        self.y_pixel_box.grid(in_=setting_sp,row=2,column=3)
+        self.x_pixel_box.insert(tk.END,125)
         self.y_pixel_box.insert(tk.END,175)
 
+        scale_guide = tk.Label(self,text="赤線までの実際の長さ")
+        scale_guide_x = tk.Label(self,text="x:")
+        scale_guide_y = tk.Label(self,text="y:")
         self.real_x = tk.Entry(self,width=10)
-        self.real_x.grid(in_=setting_sp,row=2,column=0)
-        self.real_x.insert(tk.END,500)
         self.real_y = tk.Entry(self,width=10)
-        self.real_y.grid(in_=setting_sp,row=2,column=1)
-        self.real_y.insert(tk.END,700)
+        self.real_x.insert(tk.END,50)
+        self.real_y.insert(tk.END,70)
+        scale_guide.grid(in_=setting_sp,row=3,column=0,columnspan=2)
+        scale_guide_x.grid(in_=setting_sp,row=4,column=0)
+        self.real_x.grid(in_=setting_sp,row=4,column=1)
+        scale_guide_y.grid(in_=setting_sp,row=4,column=2)
+        self.real_y.grid(in_=setting_sp,row=4,column=3)
 
         #描画開始
         Show_button =  tk.Button(self,text="描画",command=self.create_window)
@@ -87,6 +102,8 @@ class Work_window(tk.Frame):
         self.fit_y_pixel = int(y_pixel) #赤線までのピクセル数（ｙ）
         self.real_x = int(real_x) #赤線までの実際の長さ（ｘ，mm）
         self.real_y = int(real_y) #赤線までの実際の長さ（ｙ，mm）
+        self.set_origin_x = 0
+        self.set_origin_y = 0
         self.pixel_log = []
         self.pack_propagate(0)
         self.current_widget(path=path)
@@ -95,14 +112,58 @@ class Work_window(tk.Frame):
         quit_btn = tk.Button(self,text = "終了",command = self.work_destroy)
         quit_btn.place(relx=0.8,rely=0.9,anchor=tk.CENTER)
 
+        #原点設定
+        setting_origin = tk.LabelFrame(self,text="原点設定",padx=5,pady=5)
+        setting_origin_x_guide = tk.Label(self,text="x:")
+        self.setting_origin_x = tk.Entry(self,width=10)
+        setting_origin_y_guide = tk.Label(self,text="y:")
+        self.setting_origin_y = tk.Entry(self,width=10)
+        setting_road=tk.Button(self,text="適応",command=self.road_origin)
+
+        setting_origin.place(relx=0.5,y=100,anchor=tk.CENTER)
+        setting_origin_x_guide.grid(in_=setting_origin,row=0,column=0)
+        self.setting_origin_x.grid(in_=setting_origin,row=0,column=1)
+        setting_origin_y_guide.grid(in_=setting_origin,row=0,column=2)
+        self.setting_origin_y.grid(in_=setting_origin,row=0,column=3)
+        setting_road.grid(in_=setting_origin,row=0,column=4)
+
+        self.setting_origin_x.insert(tk.END,0)
+        self.setting_origin_y.insert(tk.END,0)
+
+        #座標表示
+        coordinate_sp = tk.LabelFrame(self,text="結果",padx=5,pady=5)
+        self.coordinate_x_sp = tk.Label(self,text = "x:",width=5)
+        self.coordinate_y_sp = tk.Label(self,text = "y:",width=5)
+        self.coordinate_x = tk.Label(self,text = "-",width=7)
+        self.coordinate_y = tk.Label(self,text = "-",width=7)
+
+        distance_sp=tk.Label(self,text="距離:",width=5)
+        self.distance=tk.Label(self,text="-",width=7)
+
+        median_sp=tk.Label(self,text="２点間の中点：",width=10)
+        self.median = tk.Label(self,text="-",width=20)
+        coordinate_sp.place(relx=0.5,y=200,anchor=tk.CENTER)
+        self.coordinate_x_sp.grid(in_=coordinate_sp,row=0,column=0)
+        self.coordinate_x.grid(in_=coordinate_sp,row=0,column=1)
+        self.coordinate_y_sp.grid(in_=coordinate_sp,row=0,column=2)
+        self.coordinate_y.grid(in_=coordinate_sp,row=0,column=3)
+        distance_sp.grid(in_=coordinate_sp,row=1,column=0)
+        self.distance.grid(in_=coordinate_sp,row=1,column=1)
+        median_sp.grid(in_=coordinate_sp,row=2,column=0,columnspan=2)
+        self.median.grid(in_=coordinate_sp,row=2,column=2,columnspan=2)
+
         #履歴部分
         self.rireki_sp = tk.LabelFrame(self,text="履歴",padx=10,pady=10)
-        self.Text2 = tk.StringVar()
-        self.Text2.set("-")
-        rireki1 = tk.Message(self.rireki_sp,textvariable = self.Text2,width=270,anchor="nw")
-        self.rireki_sp.place(relx=0.5,relwidth=0.3,y=220,height=150,anchor=tk.CENTER)
-        rireki1.grid(in_=self.rireki_sp,row=0,column=0)
+        #self.Text2 = tk.IntVar()
+        self.rireki1 = tk.Message(self.rireki_sp,text = "-",width=270,anchor="nw")
+        self.rireki_sp.place(relx=0.5,relwidth=0.8,y=320,height=150,anchor=tk.CENTER)
+        self.rireki1.grid(in_=self.rireki_sp,row=0,column=0)
         self.create_work(path)
+        
+    def road_origin(self):
+        self.set_origin_x=float(self.setting_origin_x.get())
+        self.set_origin_y=float(self.setting_origin_y.get())
+        #print(f"x:{self.set_origin_x},y:{self.set_origin_y}")
 
     def work_destroy(self):
         self.root.destroy()
@@ -167,7 +228,7 @@ class Work_window(tk.Frame):
             else:
                 cv2.line(crop_img, (x1,y1), (x2,y2), (0, 0, 255), 10)
         xgap,ygap = self.red_gap(filtered_red_line,filtered_green_line)
-        print(f"x:{xgap},y:{ygap}")
+        #print(f"x:{xgap},y:{ygap}")
 
         output_img = self.resize_img(crop_img,xgap,ygap)
 
@@ -185,9 +246,10 @@ class Work_window(tk.Frame):
         width = img.shape[1]
         width_coefficient = abs(self.fit_x_pixel/x)
         height_coefficient = abs(self.fit_y_pixel/y)
+        self.coerfficient = (width_coefficient,height_coefficient)#本画像のピクセル数からの縮尺
+        self.resize_gap = abs(self.gap*width_coefficient)
         self.x_coefficient = abs(self.real_x/self.fit_x_pixel)
         self.y_coefficient = abs(self.real_y/self.fit_y_pixel)
-        
         return cv2.resize(img,(int(width*width_coefficient),int(height*height_coefficient)))
         #return cv2.resize(img,(x,y))
 
@@ -246,12 +308,10 @@ class Work_window(tk.Frame):
         pillow_image = Image.fromarray(img)#opencvのndarray形式をpillowの形式に変換
         pillow_x,pillow_y=pillow_image.size
 
-        print(coordinate_list)
         height_x2 = coordinate_list[1,3]
         width_y2 = coordinate_list[0,3]
         # 切り抜く領域を指定（左, 上, 右, 下）
         crop_box= (height_x2 - self.gap,width_y2 - self.gap,pillow_x,pillow_y)# 例: (x1, y1, x2, y2)
-        print(crop_box)
         cropped_image = pillow_image.crop(crop_box)
         # Pillow形式をOpenCV形式に変換
         cropped_image_cv2 = np.array(cropped_image)
@@ -285,34 +345,30 @@ class Work_window(tk.Frame):
                     height_y.append(y2)
         return width_x,width_y1,height_x1,height_y,width_y2,height_x2
 
-    def seach_red_coordinate(self,lines,type):
-        if type == 0:
-            pass
-        elif type == 1:
-            pass
-        else:
-            pass
     def red_gap(self,red_lines,green_lines):
         ygap = red_lines[0,3] - green_lines[0,1]
         xgap = red_lines[1,3] - green_lines[1,1]
         return xgap , ygap
     # マウスクリック時に座標を取得するコールバック関数
+
     def mouse_callback(self,event, x, y, flags, param):
         if event == cv2.EVENT_LBUTTONDOWN:  # 左クリック時
-            real_x = x*self.x_coefficient
-            real_y = y*self.y_coefficient
+            real_x = float(f"{(x-self.resize_gap)*self.x_coefficient-self.set_origin_x:.2f}")
+            real_y = float(f"{self.set_origin_y-(y-self.resize_gap)*self.y_coefficient:.2f}")
+            #print(f"x:{real_x},y:{real_y}")
             self.pixel_log.insert(0,(real_x,real_y))
             if len(self.pixel_log) > 1:
                 x2,y2=self.pixel_log[1]
                 distanse = abs(math.sqrt((real_x-x2)**2+(real_y-y2)**2))
+                Median_x = (real_x+x2)/2
+                Median_y = (real_y+y2)/2
                 #check:^は「TypeError: unsupported operand type(s) for ^: 'float' and 'float'」が出て使えない
-                print(f"距離:{distanse}")
-                self.Text2.config(text=self.pixel_log[1:])
-                #print(f"x2:{x2} y2:{y2}")
-            #self.pixel_log.append(y)
-            
-            print(self.pixel_log[0])
-            print(f"Clicked at: ({real_x}, {real_y})")  # 座標を表示
+                self.rireki1.config(text=self.pixel_log[1:6])
+                self.distance.config(text=f"{distanse:.2f}")
+                self.median.config(text=f"({Median_x:.1f},{Median_y:.1f})")
+            #print(f"Clicked at: ({real_x}, {real_y})")  # 座標を表示
+            self.coordinate_x.config(text=f"{real_x:.1f}")
+            self.coordinate_y.config(text=f"{real_y:.1f}")
 
 root = tk.Tk()
 root.title("Seting Window")
