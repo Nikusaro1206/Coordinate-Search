@@ -16,7 +16,7 @@ class Seting_aplication(tk.Frame):
         self.pack_propagate(0)
         self.create_widgets()
 
-    def create_widgets(self):
+    def create_widgets(self):#参照ウィンドウの設定
         #入力欄の作成
         input_label = tk.LabelFrame(self,text="参照",padx=10,pady=10)
         input_label.place(relx=0.5,y=50,anchor=tk.CENTER)
@@ -66,7 +66,7 @@ class Seting_aplication(tk.Frame):
         Show_button =  tk.Button(self,text="描画",command=self.create_window)
         Show_button.place(relx=0.5,rely=0.8,anchor=tk.CENTER)
 
-    def file_select(self):
+    def file_select(self):#ファイルパスの参照
         idir = 'C:'
         filetype = [("jpg","*.jpg"), ("png","*.png"), ("すべて","*")]
         file_path = tk.filedialog.askopenfilename(filetypes = filetype, initialdir = idir)
@@ -74,14 +74,15 @@ class Seting_aplication(tk.Frame):
         self.input_box.delete(0,tk.END)
         self.input_box.insert(tk.END, file_path)
     
-    def create_window(self):
+    def create_window(self):#作業GUIの呼び出し
         current = tk.Tk()
-        current.title("座標の特定")
-        path,gap,xpixel,ypixel,realx,realy = self.box_get()
+        path,gap,xpixel,ypixel,realx,realy = self.box_get()#入力内容の取得
+        current.title(f"座標の特定:{path}")
         work_window = Work_window(root = current,path=path,gap=gap,
                                   real_x=realx,real_y=realy,x_pixel=xpixel,y_pixel=ypixel)
         work_window.mainloop()
-    def box_get(self):
+
+    def box_get(self):#入力内容の取得
         path = self.input_box.get()
         gap = self.gap_box.get()
         xpixel = self.x_pixel_box.get()
@@ -179,7 +180,6 @@ class Work_window(tk.Frame):
 
         # コールバック関数をウィンドウにセット
         cv2.setMouseCallback(f"Mouse click window:{normalized_path}", self.mouse_callback)
-        #cv2.setMouseCallback(f"座標の特定", self.mouse_callback)
 
         #画像読み込み
         img ,hsv= self.img_read(normalized_path)
