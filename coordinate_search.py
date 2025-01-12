@@ -23,6 +23,7 @@ class Seting_aplication(tk.Frame):
         self.input_box = tk.Entry(self,width=40)
         self.input_box.grid(in_=input_label,row=0,column=0)
         #self.input_box.insert(tk.END,"testbed.jpg")#デバッグ用
+        
         #ボタンの作成
         button = tk.Button(self,text="参照",command=self.file_select)
         button.grid(in_=input_label,row=0,column=1)
